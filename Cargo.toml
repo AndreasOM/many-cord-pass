@@ -1,0 +1,19 @@
+[package]
+name = "many-cord-pass"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name="mcp"
+path="src/mcp_main.rs"
+
+[dependencies]
+actix-web = "4.0.0-rc.2"
+anyhow = "1.0.53"
+streamdeck = "0.5.0"
+
+[dependencies.tokio]
+version = "1.16.1"
+features = ["full"]

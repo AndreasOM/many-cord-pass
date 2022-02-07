@@ -1,0 +1,12 @@
+buttons:
+    - name: about
+      type: simple
+      image: "data/about.png"
+      on_press: ""
+      on_release: ""
+
+pages:
+    - name: default
+      buttons: [
+        about
+      ]
