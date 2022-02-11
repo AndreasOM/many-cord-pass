@@ -1,3 +1,6 @@
+use many_cord_pass::Config;
+use many_cord_pass::ManyCordPass;
+
 fn find_deck() -> (u16, u16, Option<String>) {
     let hid = hidapi::HidApi::new().expect("could not connect to hidapi");
     let device = hid
@@ -42,6 +45,12 @@ fn fill(deck: &mut streamdeck::StreamDeck, delay: u64, r: u8, g: u8, b: u8) -> a
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+
+	let mut mcp = ManyCordPass::default();
+	mcp.load_config( "config.yaml" )?;
+	mcp.find_and_connect()?;
+
+/*
     let (vid, pid, serial) = find_deck();
 
     let mut deck = match streamdeck::StreamDeck::connect(vid, pid, serial) {
@@ -89,6 +98,11 @@ async fn main() -> anyhow::Result<()> {
 
         std::thread::sleep(std::time::Duration::from_millis(10));
     }
-
+*/
+	while !mcp.done() {
+		mcp.update();
+		std::thread::sleep(std::time::Duration::from_millis(10));
+	};
+	
     Ok(())
 }

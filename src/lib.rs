@@ -1,8 +1,13 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
-}
+mod config;
+pub use config::Config;
+
+mod many_cord_pass;
+pub use many_cord_pass::ManyCordPass;
+
+mod action;
+
+mod button;
+use button::Button;
+
+mod page;
+use page::Page;

@@ -1,0 +1,56 @@
+buttons:
+    - name:           about
+      type:           simple
+      image:          "data/about.png"
+      image_active:   "data/about_active.png"
+      on_press:
+      on_release:
+        http_request: "http://127.0.0.1:8080/page/next"
+    - name:           shutdown
+      type:           simple
+      image:          "data/shutdown.png"
+      image_active:   "data/shutdown_active.png"
+      on_release:
+        actions: [
+          Clear,
+          Shutdown
+        ]
+    - name:           "shutdown red"
+      type:           simple
+      image:          "data/shutdown.png"
+      image_active:   "data/shutdown_active.png"
+      on_release:
+        actions: [
+          "Clear( 200, 10, 10 )",
+#          Shutdown
+        ]
+    - name:           "shutdown blue"
+      type:           simple
+      image:          "data/shutdown.png"
+      image_active:   "data/shutdown_active.png"
+      on_release:
+        actions: [
+          "Clear( 10, 10, 200 )",
+#          Shutdown
+        ]
+pages:
+    - name: default
+      buttons: [
+        shutdown,
+        None,
+        None,
+        None,
+        about,
+
+        None,
+        None,
+        about,
+        None,
+        None,
+
+        "shutdown blue",
+        None,
+        None,
+        None,
+        "shutdown red",
+      ]
