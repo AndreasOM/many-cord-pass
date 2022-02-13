@@ -185,9 +185,6 @@ impl ManyCordPass {
                 b.update();
             }
 
-            // :TODO: remove once we fixed the Deck trait
-            //            if let Some(streamdeck) = &mut self.streamdeck {
-            //				println!("---");
             if let Some(page) = self.pages.get(self.active_page) {
                 let mut index = 0;
                 for b in page.buttons() {
@@ -234,6 +231,9 @@ impl ManyCordPass {
                                                 }
                                                 Action::Shutdown => {
                                                     self.done = true;
+                                                }
+                                                Action::HttpGet(url) => {
+                                                    println!("Http Get -> {}", url);
                                                 }
                                             }
                                         }
