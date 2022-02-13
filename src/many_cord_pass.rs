@@ -6,21 +6,36 @@ use derivative::Derivative;
 use crate::action::Action;
 use crate::Button;
 use crate::Config;
+use crate::Deck;
+use crate::deck_minifb::Deck_Minifb;
+use crate::deck_streamdeck::Deck_Streamdeck;
 use crate::Page;
 use crate::Terminal;
 
-#[derive(Derivative,Default)]
-#[derivative(Debug)]
+//#[derive(Derivative,Default)]
+//#[derivative(Debug)]
+#[derive(Default)]
 pub struct ManyCordPass {
 	config:		Option< Config >,
 	buttons:	HashMap< String, Button >,
 	pages:		Vec< Page >,
 	active_page: usize,
-	#[derivative(Debug="ignore")]	
-	deck:		Option< streamdeck::StreamDeck >,
+//	#[derivative(Debug="ignore")]	
+	streamdeck:	Option< streamdeck::StreamDeck >,
 	terminal:	Option< Terminal >,
+//	deck:		Option< Deck_Minifb >, // :TODO: impl Deck
+	deck:		Option< Box< dyn Deck > >, // :TODO: impl Deck
 	pressed_buttons:	Vec<bool>,
 	done:		bool,
+}
+
+impl core::fmt::Debug for ManyCordPass {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("ManyCordPass")
+         .field( "config", &format!( "{:?}", &self.config ) )
+         // :TODO: other fields
+         .finish()
+    }
 }
 
 
@@ -71,11 +86,30 @@ impl ManyCordPass {
 		Ok(())
 	}
 
+	pub fn run( &mut self ) -> anyhow::Result<()> {
+
+		let d: Box< dyn Deck > = match Deck_Streamdeck::find_and_connect() {
+			Ok( d ) => {
+				Box::new( d )
+			},
+			Err( e ) => {
+				eprintln!("Error finding streamdeck: {:?}\n\tUsing fake Minifb deck", &e);
+				let mut d = Deck_Minifb::new( "The Deck", 5, 3 );
+				d.run()?;
+
+				Box::new( d )
+			}
+		};
+
+		self.deck = Some( d );
+		Ok(())
+	}
+
 	pub fn find_and_connect( &mut self ) -> anyhow::Result<()> {
 
 	    let (vid, pid, serial) = find_deck()?;
 
-	    let mut deck = match streamdeck::StreamDeck::connect(vid, pid, serial) {
+	    let mut streamdeck = match streamdeck::StreamDeck::connect(vid, pid, serial) {
 	        Ok(d) => d,
 	        Err(e) => {
 	            println!("Error connecting to streamdeck: {:?}", e);
@@ -83,7 +117,7 @@ impl ManyCordPass {
 	        }
 	    };
 
-	    let version = deck.version()?;
+	    let version = streamdeck.version()?;
 	    println!("Firmware Version: {}", &version);
 
 	    if let Some( config ) = &self.config {
@@ -118,7 +152,7 @@ impl ManyCordPass {
 		self.pressed_buttons.resize( 32, false );
 
 
-	    self.deck = Some( deck );
+	    self.streamdeck = Some( streamdeck );
 
 		Ok(())
 	}
@@ -136,7 +170,7 @@ impl ManyCordPass {
 	}
 
 	pub fn update( &mut self ) -> anyhow::Result<()> {
-		if let Some( deck ) = &mut self.deck {
+		if let Some( streamdeck ) = &mut self.streamdeck {
 			for b in self.buttons.values_mut() {
 				b.update();
 			};
@@ -148,13 +182,13 @@ impl ManyCordPass {
 							if let Some( image ) = button.image() {
 //								println!("Button {} -> {} ( {:?} )", index, image, button );
 							    let opts = streamdeck::images::ImageOptions::default();
-			                    deck.set_button_file(index, &image, &opts)?;
+			                    streamdeck.set_button_file(index, &image, &opts)?;
 							}
 						}
 					}
 					index += 1;
 				}
-				match deck.read_buttons(Some(std::time::Duration::from_millis(60))) {
+				match streamdeck.read_buttons(Some(std::time::Duration::from_millis(60))) {
             		Ok(buttons) => {
             			println!("{:?}", buttons);
             			let mut i = 0;
@@ -181,7 +215,7 @@ impl ManyCordPass {
 				            					Action::Clear( r, g, b ) => {
 													let c = streamdeck::Colour { r: *r, g: *g, b: *b };
 													for k in 0..=14 {
-													    deck.set_button_rgb(k, &c);
+													    streamdeck.set_button_rgb(k, &c);
 //													    std::thread::sleep(std::time::Duration::from_millis(delay));
 													}
 				            					},

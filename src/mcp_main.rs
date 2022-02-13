@@ -48,6 +48,7 @@ async fn main() -> anyhow::Result<()> {
 
 	let mut mcp = ManyCordPass::default();
 	mcp.load_config( "config.yaml" )?;
+	/*
 	match mcp.find_and_connect() {
 		Ok( _ ) => {},
 		Err( e ) => {
@@ -55,56 +56,9 @@ async fn main() -> anyhow::Result<()> {
 			mcp.enable_terminal_input();
 		},
 	};
+	*/
 
-/*
-    let (vid, pid, serial) = find_deck();
-
-    let mut deck = match streamdeck::StreamDeck::connect(vid, pid, serial) {
-        Ok(d) => d,
-        Err(e) => {
-            println!("Error connecting to streamdeck: {:?}", e);
-            return Err(anyhow::anyhow!("Error"));
-        }
-    };
-
-    let version = deck.version()?;
-    println!("Firmware Version: {}", &version);
-
-    let key = 4;
-    let file = "data/about.png";
-    let file2 = "data/about_active.png";
-    let opts = streamdeck::images::ImageOptions::default();
-
-    println!("Setting button {} to {}", key, &file);
-    deck.set_button_file(key, &file, &opts)?;
-
-    loop {
-        match deck.read_buttons(Some(std::time::Duration::from_millis(60))) {
-            Ok(buttons) => {
-                //dbg!(&buttons);
-                if buttons[key as usize] == 1 {
-                    deck.set_button_file(key, &file2, &opts)?;
-                } else {
-                    deck.set_button_file(key, &file, &opts)?;
-                };
-                if buttons[10] == 1 {
-                    fill(&mut deck, 20, 128, 255, 64);
-                };
-                if buttons[11] == 1 {
-                    fill(&mut deck, 20, 64, 128, 255);
-                };
-                if buttons[0] == 1 {
-                    fill(&mut deck, 20, 255, 128, 64);
-                    fill(&mut deck, 20, 0, 0, 0);
-                    std::process::exit(0);
-                };
-            }
-            Err(_) => {}
-        }
-
-        std::thread::sleep(std::time::Duration::from_millis(10));
-    }
-*/
+	mcp.run()?;
 	while !mcp.done() {
 		mcp.update();
 		std::thread::sleep(std::time::Duration::from_millis(10));

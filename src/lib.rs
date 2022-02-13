@@ -9,6 +9,14 @@ mod action;
 mod button;
 use button::Button;
 
+mod deck;
+use deck::Deck;
+
+mod deck_minifb;
+use deck_minifb::Deck_Minifb;
+
+mod deck_streamdeck;
+
 mod page;
 use page::Page;
 
