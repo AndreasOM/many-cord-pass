@@ -20,6 +20,7 @@ regex = "1.5.4"
 lazy_static = "1.4.0"
 crossterm = "0.23.0"
 minifb = "0.20.0"
+image = "0.24.0"
 
 [dependencies.serde]
 version = "1.0.136"

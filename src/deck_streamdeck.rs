@@ -1,13 +1,12 @@
-
 use derivative::Derivative;
 
 use crate::deck::Deck;
 
-#[derive(Derivative,Default)]
+#[derive(Derivative, Default)]
 #[derivative(Debug)]
 pub struct Deck_Streamdeck {
-	#[derivative(Debug="ignore")]	
-	streamdeck:		Option< streamdeck::StreamDeck >,
+    #[derivative(Debug = "ignore")]
+    streamdeck: Option<streamdeck::StreamDeck>,
 }
 
 fn find_deck() -> anyhow::Result<(u16, u16, Option<String>)> {
@@ -24,13 +23,14 @@ fn find_deck() -> anyhow::Result<(u16, u16, Option<String>)> {
             }
             //dbg!(&item); item.product_id() == 0x006d
         })
-        .next() {
-        	Some( d ) => d,
-        	None => {
-        		return Err( anyhow::anyhow!( "Could not find Stream Deck" ) );
-        	},
-        };
-//        .expect("Could not find Streamdeck");
+        .next()
+    {
+        Some(d) => d,
+        None => {
+            return Err(anyhow::anyhow!("Could not find Stream Deck"));
+        }
+    };
+    //        .expect("Could not find Streamdeck");
 
     println!(
         "Attempting to connect to {:?}. vid: {:?}, pid: {:?}, serial: {:?}",
@@ -40,40 +40,42 @@ fn find_deck() -> anyhow::Result<(u16, u16, Option<String>)> {
         device.serial_number(),
     );
 
-    Ok(
-	    (
-	        device.vendor_id(),
-	        device.product_id(),
-	        device.serial_number().map(|str| String::from(str)),
-	    )
-    )
+    Ok((
+        device.vendor_id(),
+        device.product_id(),
+        device.serial_number().map(|str| String::from(str)),
+    ))
 }
 
 impl Deck_Streamdeck {
-		pub fn find_and_connect( /* :TODO: optional name? */) -> anyhow::Result<(Deck_Streamdeck)> {
+    pub fn find_and_connect(/* :TODO: optional name? */) -> anyhow::Result<(Deck_Streamdeck)> {
+        let (vid, pid, serial) = find_deck()?;
 
-	    let (vid, pid, serial) = find_deck()?;
+        let mut streamdeck = match streamdeck::StreamDeck::connect(vid, pid, serial) {
+            Ok(d) => d,
+            Err(e) => {
+                println!("Error connecting to streamdeck: {:?}", e);
+                return Err(anyhow::anyhow!("Error"));
+            }
+        };
 
-	    let mut streamdeck = match streamdeck::StreamDeck::connect(vid, pid, serial) {
-	        Ok(d) => d,
-	        Err(e) => {
-	            println!("Error connecting to streamdeck: {:?}", e);
-	            return Err(anyhow::anyhow!("Error"));
-	        }
-	    };
+        let version = streamdeck.version()?;
+        println!("Firmware Version: {}", &version);
 
-	    let version = streamdeck.version()?;
-	    println!("Firmware Version: {}", &version);
+        let mut d = Deck_Streamdeck::default();
 
-	    let mut d = Deck_Streamdeck::default();
+        d.streamdeck = Some(streamdeck);
 
-	    d.streamdeck = Some( streamdeck );
-
-		Ok(d)
-	}
+        Ok(d)
+    }
 }
 
 impl Deck for Deck_Streamdeck {
-
+    fn set_button_file(&mut self, index: u8, filename: &str) -> anyhow::Result<()> {
+        if let Some(streamdeck) = &mut self.streamdeck {
+            let opts = streamdeck::images::ImageOptions::default();
+            streamdeck.set_button_file(index, &filename, &opts)?;
+        }
+        Ok(())
+    }
 }
-

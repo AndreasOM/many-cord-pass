@@ -45,24 +45,23 @@ fn fill(deck: &mut streamdeck::StreamDeck, delay: u64, r: u8, g: u8, b: u8) -> a
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    let mut mcp = ManyCordPass::default();
+    mcp.load_config("config.yaml")?;
+    /*
+    match mcp.find_and_connect() {
+        Ok( _ ) => {},
+        Err( e ) => {
+            println!("Error connecting to Stream Deck:{}\n\tUsing terminal mode!", e);
+            mcp.enable_terminal_input();
+        },
+    };
+    */
 
-	let mut mcp = ManyCordPass::default();
-	mcp.load_config( "config.yaml" )?;
-	/*
-	match mcp.find_and_connect() {
-		Ok( _ ) => {},
-		Err( e ) => {
-			println!("Error connecting to Stream Deck:{}\n\tUsing terminal mode!", e);
-			mcp.enable_terminal_input();
-		},
-	};
-	*/
-
-	mcp.run()?;
-	while !mcp.done() {
-		mcp.update();
-		std::thread::sleep(std::time::Duration::from_millis(10));
-	};
+    mcp.run()?;
+    while !mcp.done() {
+        mcp.update();
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
 
     Ok(())
 }
