@@ -228,14 +228,8 @@ impl ManyCordPass {
                                             match action {
                                                 Action::None => {}
                                                 Action::Clear(r, g, b) => {
-                                                    let c = streamdeck::Colour {
-                                                        r: *r,
-                                                        g: *g,
-                                                        b: *b,
-                                                    };
                                                     for k in 0..=14 {
-                                                        //                                                            streamdeck.set_button_rgb(k, &c);
-                                                        //													    std::thread::sleep(std::time::Duration::from_millis(delay));
+                                                        deck.set_button_rgb(k, *r, *g, *b);
                                                     }
                                                 }
                                                 Action::Shutdown => {

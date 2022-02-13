@@ -92,4 +92,14 @@ impl Deck for Deck_Streamdeck {
             Err(anyhow::anyhow!("No Streamdeck to read buttons from!"))
         }
     }
+
+    fn set_button_rgb(&mut self, index: u8, r: u8, g: u8, b: u8) -> anyhow::Result<()> {
+        if let Some(streamdeck) = &mut self.streamdeck {
+            let c = streamdeck::Colour { r, g, b };
+            streamdeck.set_button_rgb(index, &c);
+            Ok(())
+        } else {
+            Err(anyhow::anyhow!("No Streamdeck to set button colors!"))
+        }
+    }
 }

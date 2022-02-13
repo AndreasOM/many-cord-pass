@@ -14,6 +14,7 @@ use crate::deck::Deck;
 pub enum ButtonContent {
     None,
     Image { name: String },
+    Rgb(u8, u8, u8),
 }
 
 #[derive(Derivative, Default)]
@@ -110,6 +111,28 @@ impl Deck for Deck_Minifb {
                         );
                     }
                 }
+                ButtonContent::Rgb(r, g, b) => {
+                    let x = i.wrapping_rem(self.width as usize);
+                    let y = (i / self.width as usize); //.floor();
+                                                       //        			println!("Rendering {} ({}, {}) -> {}", i, x, y, &name);
+
+                    let px = BUTTON_SIZE * x;
+                    let py = BUTTON_SIZE * y;
+                    let w = BUTTON_SIZE * self.width;
+                    //        			let h = BUTTON_SIZE * self.height;
+                    let a = 0xff;
+                    let pixel: u32 = (((a & 0xff) as u32) << 24)
+                        | ((*r as u32) << 16)
+                        | ((*g as u32) << 8)
+                        | ((*b as u32) << 0);
+
+                    for y in 0..BUTTON_SIZE {
+                        for x in 0..BUTTON_SIZE {
+                            let o = ((py + y) * w) + (px + x);
+                            self.buffer[o] = pixel;
+                        }
+                    }
+                }
                 _ => {}
             }
         }
@@ -194,6 +217,11 @@ impl Deck for Deck_Minifb {
             name: filename.to_string(),
         };
 
+        Ok(())
+    }
+
+    fn set_button_rgb(&mut self, index: u8, r: u8, g: u8, b: u8) -> anyhow::Result<()> {
+        self.button_contents[index as usize] = ButtonContent::Rgb(r, g, b);
         Ok(())
     }
 

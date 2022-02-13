@@ -20,6 +20,10 @@ pub trait Deck {
         Ok(())
     }
 
+    fn set_button_rgb(&mut self, index: u8, r: u8, g: u8, b: u8) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn read_buttons(&mut self, timeout: Option<std::time::Duration>) -> anyhow::Result<Vec<u8>>;
 }
 
