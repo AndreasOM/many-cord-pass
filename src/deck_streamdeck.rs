@@ -78,4 +78,18 @@ impl Deck for Deck_Streamdeck {
         }
         Ok(())
     }
+
+    fn read_buttons(&mut self, timeout: Option<std::time::Duration>) -> anyhow::Result<Vec<u8>> {
+        if let Some(streamdeck) = &mut self.streamdeck {
+            match streamdeck.read_buttons(timeout) {
+                Ok(b) => Ok(b.clone()),
+                Err(e) => Err(anyhow::anyhow!(
+                    "Error reading buttons from Streamdeck: {:?}",
+                    e
+                )),
+            }
+        } else {
+            Err(anyhow::anyhow!("No Streamdeck to read buttons from!"))
+        }
+    }
 }

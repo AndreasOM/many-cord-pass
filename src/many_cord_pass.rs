@@ -105,8 +105,7 @@ impl ManyCordPass {
         Ok(())
     }
 
-    fn apply_config( &mut self ) -> anyhow::Result<()> {
-
+    fn apply_config(&mut self) -> anyhow::Result<()> {
         if let Some(config) = &self.config {
             for bc in config.buttons() {
                 println!("Button: {:?}", &bc);
@@ -138,8 +137,7 @@ impl ManyCordPass {
 
         self.pressed_buttons.resize(32, false);
 
-
-    	Ok(())
+        Ok(())
     }
     pub fn find_and_connect(&mut self) -> anyhow::Result<()> {
         let (vid, pid, serial) = find_deck()?;
@@ -188,78 +186,75 @@ impl ManyCordPass {
             }
 
             // :TODO: remove once we fixed the Deck trait
-//            if let Some(streamdeck) = &mut self.streamdeck {
-//				println!("---");
-                if let Some(page) = self.pages.get(self.active_page) {
-                    let mut index = 0;
-                    for b in page.buttons() {
-                        if let Some(bn) = b {
-                            if let Some(button) = &mut self.buttons.get(bn) {
-                                if let Some(image) = button.image() {
-//									println!("Button {} -> {} ( {:?} )", index, image, button );
-//                                    let opts = streamdeck::images::ImageOptions::default();
-//                                    streamdeck.set_button_file(index, &image, &opts)?;
-                                    deck.set_button_file( index, &image );
-                                }
+            //            if let Some(streamdeck) = &mut self.streamdeck {
+            //				println!("---");
+            if let Some(page) = self.pages.get(self.active_page) {
+                let mut index = 0;
+                for b in page.buttons() {
+                    if let Some(bn) = b {
+                        if let Some(button) = &mut self.buttons.get(bn) {
+                            if let Some(image) = button.image() {
+                                //									println!("Button {} -> {} ( {:?} )", index, image, button );
+                                //                                    let opts = streamdeck::images::ImageOptions::default();
+                                //                                    streamdeck.set_button_file(index, &image, &opts)?;
+                                deck.set_button_file(index, &image);
                             }
                         }
-                        index += 1;
                     }
-                    /*
-                    match streamdeck.read_buttons(Some(std::time::Duration::from_millis(60))) {
-                        Ok(buttons) => {
-                            println!("{:?}", buttons);
-                            let mut i = 0;
-                            for b in buttons {
-                                let new_state = b > 0;
-                                let last_state = *self.pressed_buttons.get(i).unwrap_or(&false);
-                                if let Some(button_name) = &page.buttons().get(i) {
-                                    if let Some(button_name) = button_name {
-                                        if let Some(button) = &mut self.buttons.get_mut(button_name)
-                                        {
-                                            let empty_actions = Vec::new();
-                                            let actions = if new_state && !last_state {
-                                                println!("Button {} pressed", i);
-                                                button.press()
-                                            } else if !new_state && last_state {
-                                                println!("Button {} released", i);
-                                                button.release()
-                                            } else {
-                                                &empty_actions
-                                            };
+                    index += 1;
+                }
+                match deck.read_buttons(Some(std::time::Duration::from_millis(60))) {
+                    Ok(buttons) => {
+                        println!("{:?}", buttons);
+                        let mut i = 0;
+                        for b in buttons {
+                            let new_state = b > 0;
+                            let last_state = *self.pressed_buttons.get(i).unwrap_or(&false);
+                            if let Some(button_name) = &page.buttons().get(i) {
+                                if let Some(button_name) = button_name {
+                                    if let Some(button) = &mut self.buttons.get_mut(button_name) {
+                                        let empty_actions = Vec::new();
+                                        let actions = if new_state && !last_state {
+                                            println!("Button {} pressed", i);
+                                            button.press()
+                                        } else if !new_state && last_state {
+                                            println!("Button {} released", i);
+                                            button.release()
+                                        } else {
+                                            &empty_actions
+                                        };
 
-                                            for action in actions {
-                                                match action {
-                                                    Action::None => {}
-                                                    Action::Clear(r, g, b) => {
-                                                        let c = streamdeck::Colour {
-                                                            r: *r,
-                                                            g: *g,
-                                                            b: *b,
-                                                        };
-                                                        for k in 0..=14 {
-                                                            streamdeck.set_button_rgb(k, &c);
-                                                            //													    std::thread::sleep(std::time::Duration::from_millis(delay));
-                                                        }
+                                        for action in actions {
+                                            match action {
+                                                Action::None => {}
+                                                Action::Clear(r, g, b) => {
+                                                    let c = streamdeck::Colour {
+                                                        r: *r,
+                                                        g: *g,
+                                                        b: *b,
+                                                    };
+                                                    for k in 0..=14 {
+                                                        //                                                            streamdeck.set_button_rgb(k, &c);
+                                                        //													    std::thread::sleep(std::time::Duration::from_millis(delay));
                                                     }
-                                                    Action::Shutdown => {
-                                                        self.done = true;
-                                                    }
+                                                }
+                                                Action::Shutdown => {
+                                                    self.done = true;
                                                 }
                                             }
                                         }
                                     }
                                 }
-                                self.pressed_buttons[i] = b > 0;
-
-                                i += 1;
                             }
-                            //            			println!("---");
+                            self.pressed_buttons[i] = b > 0;
+
+                            i += 1;
                         }
-                        Err(e) => return Err(anyhow::anyhow!("Error reading buttons {:?}", e)),
+                        //            			println!("---");
                     }
-                    */
+                    Err(e) => return Err(anyhow::anyhow!("Error reading buttons {:?}", e)),
                 }
+            }
             //}
         }
         Ok(())
