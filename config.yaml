@@ -33,6 +33,17 @@ buttons:
           "Clear( 10, 10, 200 )",
 #          Shutdown
         ]
+    - name:           "page prev"
+      type:           simple
+      image:          "data/shutdown.png"
+      image_active:   "data/shutdown_active.png"
+      on_release:
+        actions: [
+          "Clear( 80, 200, 200 )",
+          "HttpGet(http://127.0.0.1:8080/page/prev_OR_NOT)",
+          "Test",
+#          Shutdown
+        ]
     - name:           "page next"
       type:           simple
       image:          "data/shutdown.png"
@@ -53,7 +64,7 @@ pages:
         None,
         about,
 
-        None,
+        "page prev",
         None,
         about,
         None,

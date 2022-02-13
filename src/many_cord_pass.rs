@@ -233,7 +233,23 @@ impl ManyCordPass {
                                                     self.done = true;
                                                 }
                                                 Action::HttpGet(url) => {
+                                                    let url = url.clone();
                                                     println!("Http Get -> {}", url);
+                                                    //                                                    let resp = reqwest::blocking::get( url )?;
+                                                    tokio::spawn(async move {
+                                                        match reqwest::get(url).await {
+                                                            Ok(resp) => {
+                                                                println!("{:#?}", resp);
+                                                            }
+                                                            Err(e) => {
+                                                                println!(
+                                                                    "Error: Http get got: {:?}",
+                                                                    e
+                                                                );
+                                                                //panic!("{:?}", e);
+                                                            }
+                                                        };
+                                                    });
                                                 }
                                             }
                                         }

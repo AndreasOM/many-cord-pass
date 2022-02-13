@@ -22,6 +22,9 @@ crossterm = "0.23.0"
 minifb = "0.20.0"
 image = "0.24.0"
 
+#reqwest = { version = "0.11", features = ["blocking", "json"] }
+reqwest = { version = "0.11", features = ["json"] }
+
 [dependencies.serde]
 version = "1.0.136"
 features = [ "derive" ]
