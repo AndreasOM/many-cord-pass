@@ -48,7 +48,13 @@ async fn main() -> anyhow::Result<()> {
 
 	let mut mcp = ManyCordPass::default();
 	mcp.load_config( "config.yaml" )?;
-	mcp.find_and_connect()?;
+	match mcp.find_and_connect() {
+		Ok( _ ) => {},
+		Err( e ) => {
+			println!("Error connecting to Stream Deck:{}\n\tUsing terminal mode!", e);
+			mcp.enable_terminal_input();
+		},
+	};
 
 /*
     let (vid, pid, serial) = find_deck();
@@ -103,6 +109,6 @@ async fn main() -> anyhow::Result<()> {
 		mcp.update();
 		std::thread::sleep(std::time::Duration::from_millis(10));
 	};
-	
+
     Ok(())
 }

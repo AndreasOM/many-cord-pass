@@ -11,3 +11,6 @@ use button::Button;
 
 mod page;
 use page::Page;
+
+mod terminal;
+use terminal::Terminal;

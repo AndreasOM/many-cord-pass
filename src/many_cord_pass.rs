@@ -7,6 +7,7 @@ use crate::action::Action;
 use crate::Button;
 use crate::Config;
 use crate::Page;
+use crate::Terminal;
 
 #[derive(Derivative,Default)]
 #[derivative(Debug)]
@@ -17,14 +18,15 @@ pub struct ManyCordPass {
 	active_page: usize,
 	#[derivative(Debug="ignore")]	
 	deck:		Option< streamdeck::StreamDeck >,
+	terminal:	Option< Terminal >,
 	pressed_buttons:	Vec<bool>,
 	done:		bool,
 }
 
 
-fn find_deck() -> (u16, u16, Option<String>) {
+fn find_deck() -> anyhow::Result<(u16, u16, Option<String>)> {
     let hid = hidapi::HidApi::new().expect("could not connect to hidapi");
-    let device = hid
+    let device = match hid
         .device_list()
         //.filter(|item| item.product_id() == 0x006d)
         .filter(|item| {
@@ -36,8 +38,13 @@ fn find_deck() -> (u16, u16, Option<String>) {
             }
             //dbg!(&item); item.product_id() == 0x006d
         })
-        .next()
-        .expect("Could not find Streamdeck");
+        .next() {
+        	Some( d ) => d,
+        	None => {
+        		return Err( anyhow::anyhow!( "Could not find Stream Deck" ) );
+        	},
+        };
+//        .expect("Could not find Streamdeck");
 
     println!(
         "Attempting to connect to {:?}. vid: {:?}, pid: {:?}, serial: {:?}",
@@ -47,10 +54,12 @@ fn find_deck() -> (u16, u16, Option<String>) {
         device.serial_number(),
     );
 
-    (
-        device.vendor_id(),
-        device.product_id(),
-        device.serial_number().map(|str| String::from(str)),
+    Ok(
+	    (
+	        device.vendor_id(),
+	        device.product_id(),
+	        device.serial_number().map(|str| String::from(str)),
+	    )
     )
 }
 
@@ -64,7 +73,7 @@ impl ManyCordPass {
 
 	pub fn find_and_connect( &mut self ) -> anyhow::Result<()> {
 
-	    let (vid, pid, serial) = find_deck();
+	    let (vid, pid, serial) = find_deck()?;
 
 	    let mut deck = match streamdeck::StreamDeck::connect(vid, pid, serial) {
 	        Ok(d) => d,
@@ -112,6 +121,14 @@ impl ManyCordPass {
 	    self.deck = Some( deck );
 
 		Ok(())
+	}
+
+	pub fn enable_terminal_input( &mut self ) {
+		let mut terminal = Terminal::default();
+
+		terminal.run();
+		
+		self.terminal = Some( terminal );
 	}
 
 	pub fn done( &self ) -> bool {
