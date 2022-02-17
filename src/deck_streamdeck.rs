@@ -17,6 +17,11 @@ enum MessageToDeck {
     },
 }
 
+#[derive(Debug)]
+enum MessageFromDeck {
+    Buttons( Vec< u8 > ),
+}
+
 #[derive(Debug, Default)]
 struct ConnectionInfo {
     pub vid: u16,
@@ -42,6 +47,7 @@ pub struct Deck_Streamdeck {
     buttons: Vec<u8>,
     button_changed: bool,
     to_deck_tx: Option< mpsc::Sender< MessageToDeck > >,
+    from_deck_rx: Option< mpsc::Receiver< MessageFromDeck > >,
 }
 
 fn find_deck() -> anyhow::Result<ConnectionInfo> {
@@ -109,6 +115,29 @@ impl Deck_Streamdeck {
 }
 
 impl Deck for Deck_Streamdeck {
+    fn update(&mut self) -> anyhow::Result<()> {
+        self.button_changed = false;
+
+        if let Some( rx ) = &self.from_deck_rx {
+            match rx.try_recv() {
+                Ok( m ) => {
+                    match m {
+                        MessageFromDeck::Buttons( b ) => {
+//                            println!("Buttons {:?}", &b );
+                            self.buttons = b;
+                            self.button_changed = true;
+                        },
+                        u => {
+                            println!("Unhandled {:?}", u );
+                        },
+                    }
+                }
+                Err( _ ) => {},
+            }
+        }
+
+        Ok(())
+    }
     fn run(&mut self) -> anyhow::Result<()> {
 
         let button_count = 15; // :TODO: get from model
@@ -116,12 +145,15 @@ impl Deck for Deck_Streamdeck {
             .resize(button_count, ButtonContent::None);
 
         let ( tx, rx ) = mpsc::channel();
+        let ( tx2, rx2 ) = mpsc::channel();
 
         self.to_deck_tx = Some( tx );
+        self.from_deck_rx = Some( rx2 );
         if let Some( mut connection_info ) = self.connection_info.take() { // :TODO: maybe we can copy the info instead
             tokio::spawn(async move {
                 // connection_info
                 // rx
+                // tx2
                 let ci = connection_info;
                 let mut streamdeck = match streamdeck::StreamDeck::connect(ci.vid, ci.pid, ci.serial) {
                     Ok(d) => d,
@@ -141,35 +173,50 @@ impl Deck for Deck_Streamdeck {
                 }
 
                 loop {
-                    match rx.recv_timeout(std::time::Duration::from_millis(15)) {
-                        Ok( m ) => {
-                            match m {
-                                MessageToDeck::Shutdown => {
-                                    println!("Shutdown!!!!");
-                                    return;
-                                },
-                                MessageToDeck::SetButtonFile{ index, ref filename } => {
-                                    let opts = streamdeck::images::ImageOptions::default();
-                                    streamdeck.set_button_file(index, &filename, &opts); // :TODO: ?
-                                },
-                                MessageToDeck::SetButtonRgb{ index, r, g, b } => {
-                                    let c = streamdeck::Colour { r, g, b };
-                                    streamdeck.set_button_rgb(index, &c);
-                                },
-                                u => {
-                                    println!("Unhandled message: {:?}", u );
-                                },
-                            }
+                    match streamdeck.read_buttons(Some(std::time::Duration::from_millis(15))) {
+                        Ok(b) => {
+                            tx2.send( MessageFromDeck::Buttons( b.clone() ) );
                         },
-                        Err( mpsc::RecvTimeoutError::Disconnected ) => {
-                            println!("Disconnected!");
-                            return;
-                        }
-                        Err( e ) => {
+                        Err(e) => {
+//                            println!("Error reading buttons from Streamdeck: {:?}",e);
+                        },
+                    }
 
-                            // just timeouts
-//                            println!("Error: {:?}", &e);
-                        },
+                    // :TODO: handle more than one message?!
+                    let mut wait = 15;
+                    let max_messages = 20;
+                    for _n in 0..max_messages {
+                        match rx.recv_timeout(std::time::Duration::from_millis(wait)) {
+                            Ok( m ) => {
+                                match m {
+                                    MessageToDeck::Shutdown => {
+                                        println!("Shutdown!!!!");
+                                        return;
+                                    },
+                                    MessageToDeck::SetButtonFile{ index, ref filename } => {
+                                        let opts = streamdeck::images::ImageOptions::default();
+                                        streamdeck.set_button_file(index, &filename, &opts); // :TODO: ?
+                                    },
+                                    MessageToDeck::SetButtonRgb{ index, r, g, b } => {
+                                        let c = streamdeck::Colour { r, g, b };
+                                        streamdeck.set_button_rgb(index, &c);
+                                    },
+                                    u => {
+                                        println!("Unhandled message: {:?}", u );
+                                    },
+                                }
+                            },
+                            Err( mpsc::RecvTimeoutError::Disconnected ) => {
+                                println!("Disconnected!");
+                                return;
+                            }
+                            Err( e ) => {
+                                break;
+                                // just timeouts
+    //                            println!("Error: {:?}", &e);
+                            },
+                        }
+                        wait = 0;
                     }
                 }
             });
