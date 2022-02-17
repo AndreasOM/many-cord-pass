@@ -23,7 +23,7 @@ pub struct ManyCordPass {
     streamdeck: Option<streamdeck::StreamDeck>,
     terminal: Option<Terminal>,
     //	deck:		Option< Deck_Minifb >, // :TODO: impl Deck
-    deck: Option<Box<dyn Deck>>, // :TODO: impl Deck
+    deck: Vec<Box<dyn Deck>>, // :TODO: impl Deck
     pressed_buttons: Vec<bool>,
     done: bool,
 }
@@ -84,21 +84,28 @@ impl ManyCordPass {
     }
 
     pub fn run(&mut self) -> anyhow::Result<()> {
-        let d: Box<dyn Deck> = match Deck_Streamdeck::find_and_connect() {
-            Ok(d) => Box::new(d),
+        match Deck_Streamdeck::find_and_connect() {
+            Ok(d) => {
+                self.deck.push( Box::new( d ) );
+            }
             Err(e) => {
                 eprintln!(
                     "Error finding streamdeck: {:?}\n\tUsing fake Minifb deck",
                     &e
                 );
-                let mut d = Deck_Minifb::new("The Deck", 5, 3);
-                d.run()?;
-
-                Box::new(d)
             }
         };
 
-        self.deck = Some(d);
+        let force_fake = true;
+        if force_fake || self.deck.is_empty() {
+                let mut d = Deck_Minifb::new("The Deck", 5, 3);
+
+                self.deck.push( Box::new( d ) );
+        }
+
+        for d in self.deck.iter_mut() {
+            d.run()?;
+        }
 
         self.apply_config()?;
 
@@ -169,21 +176,24 @@ impl ManyCordPass {
     }
 
     pub fn done(&self) -> bool {
-        if let Some(deck) = &self.deck {
-            if deck.done() {
-                return true;
-            }
+        if self.deck.iter().any({ |d| d.done() }) {
+            true 
+        } else {
+            self.done
         }
-        self.done
     }
 
     pub fn update(&mut self) -> anyhow::Result<()> {
-        if let Some(deck) = &mut self.deck {
+        for b in self.buttons.values_mut() {
+            b.update();
+        }
+
+        let mut all_actions: Vec< Action > = Vec::new();
+
+        for deck in self.deck.iter_mut() {
+//        if let Some(deck) = &mut self.deck {
             deck.update();
 
-            for b in self.buttons.values_mut() {
-                b.update();
-            }
 
             if let Some(page) = self.pages.get(self.active_page) {
                 let mut index = 0;
@@ -200,7 +210,7 @@ impl ManyCordPass {
                     }
                     index += 1;
                 }
-                match deck.read_buttons(Some(std::time::Duration::from_millis(60))) {
+                match deck.read_buttons(Some(std::time::Duration::from_millis(6))) {
                     Ok(buttons) => {
                         println!("{:?}", buttons);
                         let mut i = 0;
@@ -211,7 +221,7 @@ impl ManyCordPass {
                                 if let Some(button_name) = button_name {
                                     if let Some(button) = &mut self.buttons.get_mut(button_name) {
                                         let empty_actions = Vec::new();
-                                        let actions = if new_state && !last_state {
+                                        let mut actions = if new_state && !last_state {
                                             println!("Button {} pressed", i);
                                             button.press()
                                         } else if !new_state && last_state {
@@ -220,50 +230,12 @@ impl ManyCordPass {
                                         } else {
                                             &empty_actions
                                         };
-
-                                        for action in actions {
-                                            match action {
-                                                Action::None => {}
-                                                Action::Clear(r, g, b) => {
-                                                    for k in 0..=14 {
-                                                        deck.set_button_rgb(k, *r, *g, *b);
-                                                    }
-                                                }
-                                                Action::Shutdown => {
-                                                    self.done = true;
-                                                }
-                                                Action::HttpGet(url) => {
-                                                    let url = url.clone();
-                                                    println!("Http Get -> {}", url);
-                                                    //                                                    let resp = reqwest::blocking::get( url )?;
-                                                    tokio::spawn(async move {
-                                                        match reqwest::get(url).await {
-                                                            Ok(resp) => {
-                                                                println!("{:#?}", resp);
-                                                                match resp.text().await {
-                                                                    Ok(text) => {
-                                                                        println!("{:?}", text);
-                                                                    }
-                                                                    Err(e) => {
-                                                                        println!(
-                                                                    "Error: Http get text got: {:?}",
-                                                                    e
-                                                                );
-                                                                    }
-                                                                }
-                                                            }
-                                                            Err(e) => {
-                                                                println!(
-                                                                    "Error: Http get got: {:?}",
-                                                                    e
-                                                                );
-                                                                //panic!("{:?}", e);
-                                                            }
-                                                        };
-                                                    });
-                                                }
-                                            }
+                                        for a in actions {
+                                            //let a = a.clone();
+                                            all_actions.push( a.clone() );
                                         }
+
+                                        //all_actions.append( actions.clone() );
                                     }
                                 }
                             }
@@ -273,11 +245,60 @@ impl ManyCordPass {
                         }
                         //            			println!("---");
                     }
-                    Err(e) => return Err(anyhow::anyhow!("Error reading buttons {:?}", e)),
+                    Err(e) => {
+                        // return Err(anyhow::anyhow!("Error reading buttons {:?}", e)); // Not an error, just nothing happened
+                    },
                 }
             }
             //}
         }
+
+        for action in all_actions {
+            match action {
+                Action::None => {}
+                Action::Clear(r, g, b) => {
+                    for k in 0..=14 {
+                        for deck in self.deck.iter_mut() {
+                            deck.set_button_rgb(k, r, g, b);
+                        }
+                    }
+                }
+                Action::Shutdown => {
+                    self.done = true;
+                }
+                Action::HttpGet(url) => {
+                    let url = url.clone();
+                    println!("Http Get -> {}", url);
+                    //                                                    let resp = reqwest::blocking::get( url )?;
+                    tokio::spawn(async move {
+                        match reqwest::get(url).await {
+                            Ok(resp) => {
+                                println!("{:#?}", resp);
+                                match resp.text().await {
+                                    Ok(text) => {
+                                        println!("{:?}", text);
+                                    }
+                                    Err(e) => {
+                                        println!(
+                                    "Error: Http get text got: {:?}",
+                                    e
+                                );
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                println!(
+                                    "Error: Http get got: {:?}",
+                                    e
+                                );
+                                //panic!("{:?}", e);
+                            }
+                        };
+                    });
+                }
+            }
+        }
+
         Ok(())
     }
 }

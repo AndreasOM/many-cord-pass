@@ -2,7 +2,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use regex::RegexSet;
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub enum Action {
     None,
     Clear(u8, u8, u8), // will clear all images, but this will be overwritten next frame

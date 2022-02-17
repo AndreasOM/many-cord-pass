@@ -59,7 +59,12 @@ async fn main() -> anyhow::Result<()> {
 
     mcp.run()?;
     while !mcp.done() {
-        mcp.update();
+        match mcp.update() {
+            Ok( _ ) => {},
+            Err( e ) => {
+                println!("Error: {:?}", &e);
+            },
+        };
         std::thread::sleep(std::time::Duration::from_millis(10));
     }
 
