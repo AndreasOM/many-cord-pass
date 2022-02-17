@@ -8,8 +8,8 @@ buttons:
         http_request: "http://127.0.0.1:8080/page/next"
     - name:           shutdown
       type:           simple
-      image:          "data/shutdown.png"
-      image_active:   "data/shutdown_active.png"
+      image:          "data/power.png"
+      image_active:   "data/power_active.png"
       on_release:
         actions: [
           Clear,
@@ -35,25 +35,66 @@ buttons:
         ]
     - name:           "page prev"
       type:           simple
-      image:          "data/shutdown.png"
-      image_active:   "data/shutdown_active.png"
+      image:          "data/left.png"
+      image_active:   "data/left_active.png"
       on_release:
         actions: [
           "Clear( 80, 200, 200 )",
-          "HttpGet(http://127.0.0.1:8080/page/prev_OR_NOT)",
+          "HttpGet(http://127.0.0.1:8080/page/prev)",
           "Test",
 #          Shutdown
         ]
     - name:           "page next"
       type:           simple
-      image:          "data/shutdown.png"
-      image_active:   "data/shutdown_active.png"
+      image:          "data/right.png"
+      image_active:   "data/right_active.png"
       on_release:
         actions: [
           "Clear( 200, 200, 80 )",
           "HttpGet(http://127.0.0.1:8080/page/next)",
           "Test",
 #          Shutdown
+        ]
+
+    - name:           "page 0"
+      type:           simple
+      image:          "data/page_0.png"
+#      image_active:   "data/right_active.png"
+      on_release:
+        actions: [
+          "HttpGet(http://127.0.0.1:8080/page/name/Page%200)",
+        ]
+    - name:           "page 1"
+      type:           simple
+      image:          "data/page_1.png"
+#      image_active:   "data/right_active.png"
+      on_release:
+        actions: [
+          "HttpGet(http://127.0.0.1:8080/page/name/Page%201)",
+        ]
+    - name:           "page 2"
+      type:           simple
+      image:          "data/page_2.png"
+#      image_active:   "data/right_active.png"
+      on_release:
+        actions: [
+          "HttpGet(http://127.0.0.1:8080/page/name/Page%202)",
+        ]
+    - name:           "page 3"
+      type:           simple
+      image:          "data/page_3.png"
+#      image_active:   "data/right_active.png"
+      on_release:
+        actions: [
+          "HttpGet(http://127.0.0.1:8080/page/name/Page%203)",
+        ]
+    - name:           "page 4"
+      type:           simple
+      image:          "data/page_4.png"
+#      image_active:   "data/right_active.png"
+      on_release:
+        actions: [
+          "HttpGet(http://127.0.0.1:8080/page/name/Page%204)",
         ]
 pages:
     - name: default
@@ -70,9 +111,10 @@ pages:
         None,
         "page next",
 
-        "shutdown blue",
-        None,
-        None,
-        None,
-        "shutdown red",
+#        "shutdown blue",
+        "page 0",
+        "page 1",
+        "page 2",
+        "page 3",
+        "page 4",
       ]

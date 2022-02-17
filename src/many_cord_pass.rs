@@ -240,6 +240,17 @@ impl ManyCordPass {
                                                         match reqwest::get(url).await {
                                                             Ok(resp) => {
                                                                 println!("{:#?}", resp);
+                                                                match resp.text().await {
+                                                                    Ok(text) => {
+                                                                        println!("{:?}", text);
+                                                                    }
+                                                                    Err(e) => {
+                                                                        println!(
+                                                                    "Error: Http get text got: {:?}",
+                                                                    e
+                                                                );
+                                                                    }
+                                                                }
                                                             }
                                                             Err(e) => {
                                                                 println!(
