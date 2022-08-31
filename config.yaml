@@ -33,6 +33,28 @@ buttons:
           "Clear( 10, 10, 200 )",
 #          Shutdown
         ]
+    - name:           "big me"
+      type:           simple
+      image:          "data/left.png"
+      image_active:   "data/left_active.png"
+      on_release:
+        actions: [
+          "Clear( 80, 200, 200 )",
+          "ObsScene(172.20.1.187,Big%20Me)",
+          "Test",
+#          Shutdown
+        ]
+    - name:           "small me"
+      type:           simple
+      image:          "data/left.png"
+      image_active:   "data/left_active.png"
+      on_release:
+        actions: [
+          "Clear( 80, 200, 200 )",
+          "ObsScene(172.20.1.187,Small%20Me)",
+          "Test",
+#          Shutdown
+        ]
     - name:           "page prev"
       type:           simple
       image:          "data/left.png"
@@ -40,7 +62,7 @@ buttons:
       on_release:
         actions: [
           "Clear( 80, 200, 200 )",
-          "HttpGet(http://127.0.0.1:8080/page/prev)",
+          "HttpGet(http://172.20.1.187:8080/page/prev)",
           "Test",
 #          Shutdown
         ]
@@ -51,7 +73,7 @@ buttons:
       on_release:
         actions: [
           "Clear( 200, 200, 80 )",
-          "HttpGet(http://127.0.0.1:8080/page/next)",
+          "HttpGet(http://172.20.1.187:8080/page/next)",
           "Test",
 #          Shutdown
         ]
@@ -100,8 +122,8 @@ pages:
     - name: default
       buttons: [
         shutdown,
-        None,
-        None,
+        "big me",
+        "small me",
         None,
         about,
 

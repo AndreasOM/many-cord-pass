@@ -1,0 +1,17 @@
+buttons:
+    - name:           "big me"
+      type:           simple
+      image:          "data/left.png"
+      image_active:   "data/left_active.png"
+      on_release:
+        actions: [
+          "Clear( 80, 200, 200 )",
+          "ObsScene(172.20.1.187,Big%20Me)",
+          "Test",
+#          Shutdown
+        ]
+pages:
+    - name: default
+      buttons: [
+        "big me",
+      ]

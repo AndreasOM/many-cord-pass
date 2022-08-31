@@ -8,6 +8,7 @@ pub enum Action {
     Clear(u8, u8, u8), // will clear all images, but this will be overwritten next frame
     Shutdown,
     HttpGet(String),
+    ObsScene(String,String),
 }
 
 impl Default for Action {
@@ -59,6 +60,26 @@ fn httpget_from_string(s: &str) -> Option<Action> {
     None
 }
 
+fn obsscene_from_string(s: &str) -> Option<Action> {
+    lazy_static! {
+                static ref RE: Regex =
+                    Regex::new(
+    //                  r"^HttpGet\(\s*http:\\\\.*\s*\)$",
+                        r"^ObsScene\(\s*(.+)\s*,\s*(.+)\s*\)$",
+                    ).unwrap();
+            }
+    if let Some(c) = RE.captures(s) {
+        dbg!(&c);
+        println!("--------");
+        if c.len() == 3 {
+            return Some(Action::ObsScene(c[1].to_string(), c[2].to_string()));
+        }
+    }
+
+    dbg!(s);
+    None
+}
+
 impl From<&str> for Action {
     fn from(v: &str) -> Self {
         match v {
@@ -68,6 +89,8 @@ impl From<&str> for Action {
                 if let Some(a) = clear_from_string(&v) {
                     a
                 } else if let Some(a) = httpget_from_string(&v) {
+                    a
+                } else if let Some(a) = obsscene_from_string(&v) {
                     a
                 } else {
                     Action::None

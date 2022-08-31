@@ -47,6 +47,7 @@ fn fill(deck: &mut streamdeck::StreamDeck, delay: u64, r: u8, g: u8, b: u8) -> a
 async fn main() -> anyhow::Result<()> {
     let mut mcp = ManyCordPass::default();
     mcp.load_config("config.yaml")?;
+    dbg!(&mcp);
     /*
     match mcp.find_and_connect() {
         Ok( _ ) => {},

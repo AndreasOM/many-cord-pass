@@ -77,7 +77,7 @@ fn find_deck() -> anyhow::Result<(u16, u16, Option<String>)> {
 
 impl ManyCordPass {
     pub fn load_config(&mut self, filename: &str) -> anyhow::Result<()> {
-        let config = Config::from_file("config.yaml")?;
+        let config = Config::from_file(filename)?;
         self.config = Some(config);
 
         Ok(())
@@ -253,6 +253,7 @@ impl ManyCordPass {
             //}
         }
 
+
         for action in all_actions {
             match action {
                 Action::None => {}
@@ -266,6 +267,25 @@ impl ManyCordPass {
                 Action::Shutdown => {
                     self.done = true;
                 }
+                Action::ObsScene(ip,scene) => {
+                    // :HACK:
+                    tokio::spawn(async move {
+                        let scene = urlencoding::decode(&scene).unwrap();
+                        println!("Trying to switch OBS scene on {} to >{}<", &ip, &scene);
+                        let client = match obws::Client::connect(&ip, 4455, std::env::var("OBS_PASSWORD").ok()).await {
+                            Ok(c) => c,
+                            _ => panic!(),
+                        };
+
+                        let scene_list = client.scenes().list().await.unwrap();
+                        dbg!(&scene_list);
+                        client
+                            .scenes()
+                            .set_current_program_scene(&scene)
+                            .await.unwrap();
+
+                    });
+                },
                 Action::HttpGet(url) => {
                     let url = url.clone();
                     println!("Http Get -> {}", url);
