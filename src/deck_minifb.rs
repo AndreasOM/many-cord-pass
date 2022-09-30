@@ -17,7 +17,7 @@ pub enum ButtonContent {
 
 #[derive(Derivative, Default)]
 #[derivative(Debug)]
-pub struct Deck_Minifb {
+pub struct DeckMinifb {
 	title:           String,
 	width:           usize, // in buttons
 	height:          usize, // in buttons
@@ -32,7 +32,7 @@ pub struct Deck_Minifb {
 
 const BUTTON_SIZE: usize = 72;
 
-impl Deck_Minifb {
+impl DeckMinifb {
 	pub fn new(title: &str, w: usize, h: usize) -> Self {
 		Self {
 			title:           title.to_string(),
@@ -49,7 +49,7 @@ impl Deck_Minifb {
 	}
 }
 
-impl Deck for Deck_Minifb {
+impl Deck for DeckMinifb {
 	fn run(&mut self) -> anyhow::Result<()> {
 		let pw = BUTTON_SIZE * self.width;
 		let ph = BUTTON_SIZE * self.height;
@@ -78,13 +78,13 @@ impl Deck for Deck_Minifb {
 			match bc {
 				ButtonContent::Image { name } => {
 					let x = i.wrapping_rem(self.width as usize);
-					let y = (i / self.width as usize); //.floor();
-								   //        			println!("Rendering {} ({}, {}) -> {}", i, x, y, &name);
+					let y = i / self.width as usize; //.floor();
+								 // println!("Rendering {} ({}, {}) -> {}", i, x, y, &name);
 
 					let px = BUTTON_SIZE * x;
 					let py = BUTTON_SIZE * y;
 					let w = BUTTON_SIZE * self.width;
-					//        			let h = BUTTON_SIZE * self.height;
+					// let h = BUTTON_SIZE * self.height;
 
 					if let Some(img) = &mut self.images.get(name) {
 						// :TODO: this is very inefficient -> fix
@@ -111,13 +111,13 @@ impl Deck for Deck_Minifb {
 				},
 				ButtonContent::Rgb(r, g, b) => {
 					let x = i.wrapping_rem(self.width as usize);
-					let y = (i / self.width as usize); //.floor();
-								   //        			println!("Rendering {} ({}, {}) -> {}", i, x, y, &name);
+					let y = i / self.width as usize; //.floor();
+								 // println!("Rendering {} ({}, {}) -> {}", i, x, y, &name);
 
 					let px = BUTTON_SIZE * x;
 					let py = BUTTON_SIZE * y;
 					let w = BUTTON_SIZE * self.width;
-					//        			let h = BUTTON_SIZE * self.height;
+					// let h = BUTTON_SIZE * self.height;
 					let a = 0xff;
 					let pixel: u32 = (((a & 0xff) as u32) << 24)
 						| ((*r as u32) << 16) | ((*g as u32) << 8)
@@ -135,7 +135,7 @@ impl Deck for Deck_Minifb {
 		}
 
 		if let Some(window) = &mut self.window {
-			let mut old_buttons = self.buttons.clone();
+			let old_buttons = self.buttons.clone();
 			for b in self.buttons.iter_mut() {
 				*b = 0;
 			}

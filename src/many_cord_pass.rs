@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 
-use derivative::Derivative;
-
+//use derivative::Derivative;
 use crate::action::Action;
-use crate::deck_minifb::Deck_Minifb;
-use crate::deck_streamdeck::Deck_Streamdeck;
+use crate::deck_minifb::DeckMinifb;
+use crate::deck_streamdeck::DeckStreamdeck;
 use crate::Button;
 use crate::Config;
 use crate::Deck;
@@ -84,7 +83,7 @@ impl ManyCordPass {
 	}
 
 	pub fn run(&mut self) -> anyhow::Result<()> {
-		match Deck_Streamdeck::find_and_connect() {
+		match DeckStreamdeck::find_and_connect() {
 			Ok(d) => {
 				self.deck.push(Box::new(d));
 			},
@@ -98,7 +97,7 @@ impl ManyCordPass {
 
 		let force_fake = true;
 		if force_fake || self.deck.is_empty() {
-			let mut d = Deck_Minifb::new("The Deck", 5, 3);
+			let d = DeckMinifb::new("The Deck", 5, 3);
 
 			self.deck.push(Box::new(d));
 		}
@@ -116,13 +115,13 @@ impl ManyCordPass {
 		if let Some(config) = &self.config {
 			for bc in config.buttons() {
 				println!("Button: {:?}", &bc);
-				let mut button = Button::from_config(&bc)?;
+				let button = Button::from_config(&bc)?;
 
 				self.buttons.insert(bc.name.clone(), button);
 			}
 
 			for pc in config.pages() {
-				let mut page = Page::from_config(&pc)?;
+				let page = Page::from_config(&pc)?;
 
 				self.pages.push(page);
 			}
@@ -170,13 +169,13 @@ impl ManyCordPass {
 	pub fn enable_terminal_input(&mut self) {
 		let mut terminal = Terminal::default();
 
-		terminal.run();
+		let _ = terminal.run();
 
 		self.terminal = Some(terminal);
 	}
 
 	pub fn done(&self) -> bool {
-		if self.deck.iter().any({ |d| d.done() }) {
+		if self.deck.iter().any(|d| d.done()) {
 			true
 		} else {
 			self.done
@@ -192,7 +191,7 @@ impl ManyCordPass {
 
 		for deck in self.deck.iter_mut() {
 			//        if let Some(deck) = &mut self.deck {
-			deck.update();
+			deck.update()?;
 
 			if let Some(page) = self.pages.get(self.active_page) {
 				let mut index = 0;
@@ -203,7 +202,7 @@ impl ManyCordPass {
 								//									println!("Button {} -> {} ( {:?} )", index, image, button );
 								//                                    let opts = streamdeck::images::ImageOptions::default();
 								//                                    streamdeck.set_button_file(index, &image, &opts)?;
-								deck.set_button_file(index, &image);
+								deck.set_button_file(index, &image)?;
 							}
 						}
 					}
@@ -220,7 +219,7 @@ impl ManyCordPass {
 								if let Some(button_name) = button_name {
 									if let Some(button) = &mut self.buttons.get_mut(button_name) {
 										let empty_actions = Vec::new();
-										let mut actions = if new_state && !last_state {
+										let actions = if new_state && !last_state {
 											println!("Button {} pressed", i);
 											button.press()
 										} else if !new_state && last_state {
@@ -244,7 +243,7 @@ impl ManyCordPass {
 						}
 						//            			println!("---");
 					},
-					Err(e) => {
+					Err(_e) => {
 						// return Err(anyhow::anyhow!("Error reading buttons {:?}", e)); // Not an error, just nothing happened
 					},
 				}
@@ -258,7 +257,7 @@ impl ManyCordPass {
 				Action::Clear(r, g, b) => {
 					for k in 0..=14 {
 						for deck in self.deck.iter_mut() {
-							deck.set_button_rgb(k, r, g, b);
+							deck.set_button_rgb(k, r, g, b)?;
 						}
 					}
 				},

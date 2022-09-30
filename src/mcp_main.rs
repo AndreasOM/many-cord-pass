@@ -2,7 +2,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use clap::Parser;
-use many_cord_pass::Config;
+//use many_cord_pass::Config;
 use many_cord_pass::ManyCordPass;
 
 #[derive(Parser)]
@@ -12,7 +12,7 @@ struct Cli {
 	#[arg(short, long, value_name = "CONFIG")]
 	config: Option<PathBuf>,
 }
-
+/*
 fn find_deck() -> (u16, u16, Option<String>) {
 	let hid = hidapi::HidApi::new().expect("could not connect to hidapi");
 	let device = hid
@@ -44,17 +44,18 @@ fn find_deck() -> (u16, u16, Option<String>) {
 		device.serial_number().map(|str| String::from(str)),
 	)
 }
-
+*/
+/*
 fn fill(deck: &mut streamdeck::StreamDeck, delay: u64, r: u8, g: u8, b: u8) -> anyhow::Result<()> {
 	let c = streamdeck::Colour { r, g, b };
 	for k in 0..=14 {
-		deck.set_button_rgb(k, &c);
+		deck.set_button_rgb(k, &c)?;
 		std::thread::sleep(std::time::Duration::from_millis(delay));
 	}
 
 	Ok(())
 }
-
+*/
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
 	let cli = Cli::parse();

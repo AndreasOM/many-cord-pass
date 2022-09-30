@@ -41,7 +41,7 @@ pub enum ButtonContent {
 
 #[derive(Derivative, Default)]
 #[derivative(Debug)]
-pub struct Deck_Streamdeck {
+pub struct DeckStreamdeck {
 	//    #[derivative(Debug = "ignore")]
 	//    streamdeck: Option<streamdeck::StreamDeck>,
 	connection_info: Option<ConnectionInfo>,
@@ -90,8 +90,8 @@ fn find_deck() -> anyhow::Result<ConnectionInfo> {
 	})
 }
 
-impl Deck_Streamdeck {
-	pub fn find_and_connect(/* :TODO: optional name? */) -> anyhow::Result<(Deck_Streamdeck)> {
+impl DeckStreamdeck {
+	pub fn find_and_connect(/* :TODO: optional name? */) -> anyhow::Result<DeckStreamdeck> {
 		let connection_info = find_deck()?;
 		/*
 				let mut streamdeck = match streamdeck::StreamDeck::connect(vid, pid, serial) {
@@ -109,14 +109,14 @@ impl Deck_Streamdeck {
 
 				d.streamdeck = Some(streamdeck);
 		*/
-		let mut d = Deck_Streamdeck::default();
+		let mut d = DeckStreamdeck::default();
 		d.connection_info = Some(connection_info);
 
 		Ok(d)
 	}
 }
 
-impl Deck for Deck_Streamdeck {
+impl Deck for DeckStreamdeck {
 	fn update(&mut self) -> anyhow::Result<()> {
 		self.button_changed = false;
 
@@ -129,6 +129,7 @@ impl Deck for Deck_Streamdeck {
 							self.buttons = b;
 							self.button_changed = true;
 						},
+						#[allow(unreachable_patterns)]
 						u => {
 							println!("Unhandled {:?}", u);
 						},
@@ -150,7 +151,7 @@ impl Deck for Deck_Streamdeck {
 
 		self.to_deck_tx = Some(tx);
 		self.from_deck_rx = Some(rx2);
-		if let Some(mut connection_info) = self.connection_info.take() {
+		if let Some(connection_info) = self.connection_info.take() {
 			// :TODO: maybe we can copy the info instead
 			tokio::spawn(async move {
 				// connection_info
@@ -178,9 +179,12 @@ impl Deck for Deck_Streamdeck {
 				loop {
 					match streamdeck.read_buttons(Some(std::time::Duration::from_millis(15))) {
 						Ok(b) => {
-							tx2.send(MessageFromDeck::Buttons(b.clone()));
+							match tx2.send(MessageFromDeck::Buttons(b.clone())) {
+								Ok(()) => {},
+								Err(_e) => {},
+							};
 						},
-						Err(e) => {
+						Err(_e) => {
 							//                            println!("Error reading buttons from Streamdeck: {:?}",e);
 						},
 					}
@@ -201,12 +205,13 @@ impl Deck for Deck_Streamdeck {
 										ref filename,
 									} => {
 										let opts = streamdeck::images::ImageOptions::default();
-										streamdeck.set_button_file(index, &filename, &opts); // :TODO: ?
+										let _ = streamdeck.set_button_file(index, &filename, &opts); // :TODO: ?
 									},
 									MessageToDeck::SetButtonRgb { index, r, g, b } => {
 										let c = streamdeck::Colour { r, g, b };
-										streamdeck.set_button_rgb(index, &c);
+										let _ = streamdeck.set_button_rgb(index, &c);
 									},
+									#[allow(unreachable_patterns)]
 									u => {
 										println!("Unhandled message: {:?}", u);
 									},
@@ -216,7 +221,7 @@ impl Deck for Deck_Streamdeck {
 								println!("Disconnected!");
 								return;
 							},
-							Err(e) => {
+							Err(_e) => {
 								break;
 								// just timeouts
 								//                            println!("Error: {:?}", &e);
@@ -258,7 +263,7 @@ impl Deck for Deck_Streamdeck {
 		Ok(())
 	}
 
-	fn read_buttons(&mut self, timeout: Option<std::time::Duration>) -> anyhow::Result<Vec<u8>> {
+	fn read_buttons(&mut self, _timeout: Option<std::time::Duration>) -> anyhow::Result<Vec<u8>> {
 		/*
 		if let Some(streamdeck) = &mut self.streamdeck {
 			match streamdeck.read_buttons(timeout) {
@@ -292,11 +297,11 @@ impl Deck for Deck_Streamdeck {
 	}
 }
 
-impl Drop for Deck_Streamdeck {
+impl Drop for DeckStreamdeck {
 	fn drop(&mut self) {
 		if let Some(sender) = &mut self.to_deck_tx {
 			//            panic!("Drop!");
-			sender.send(MessageToDeck::Shutdown);
+			let _ = sender.send(MessageToDeck::Shutdown);
 		}
 	}
 }

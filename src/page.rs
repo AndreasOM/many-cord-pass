@@ -21,6 +21,7 @@ impl Page {
 		Ok(p)
 	}
 
+	#[allow(dead_code)]
 	pub fn name(&self) -> &str {
 		&self.name
 	}

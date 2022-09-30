@@ -9,7 +9,7 @@ impl Terminal {
 	pub fn run(&mut self) -> anyhow::Result<()> {
 		self.number_key_status.resize(10, 0);
 
-		terminal::enable_raw_mode();
+		terminal::enable_raw_mode()?;
 
 		tokio::spawn(async move {
 			loop {
@@ -26,7 +26,7 @@ impl Terminal {
 												event::KeyModifiers::CONTROL,
 											) => {
 												println!("Got ctrl-c. Exiting!");
-												terminal::disable_raw_mode();
+												let _ = terminal::disable_raw_mode();
 												std::process::exit(-1);
 											},
 											_ => {},
@@ -52,6 +52,7 @@ impl Terminal {
 		Ok(())
 	}
 
+	#[allow(dead_code)]
 	pub fn number_key_status(&self) -> &Vec<u8> {
 		&self.number_key_status
 	}

@@ -1,6 +1,6 @@
 //use derivative::Derivative;
 
-const EMPTY: Vec<u8> = vec![];
+//const EMPTY: Vec<u8> = vec![];
 
 //#[derive(Derivative,Default)]
 //#[derivative(Debug)]
@@ -16,11 +16,11 @@ pub trait Deck {
 		false
 	}
 
-	fn set_button_file(&mut self, index: u8, filename: &str) -> anyhow::Result<()> {
+	fn set_button_file(&mut self, _index: u8, _filename: &str) -> anyhow::Result<()> {
 		Ok(())
 	}
 
-	fn set_button_rgb(&mut self, index: u8, r: u8, g: u8, b: u8) -> anyhow::Result<()> {
+	fn set_button_rgb(&mut self, _index: u8, _r: u8, _g: u8, _b: u8) -> anyhow::Result<()> {
 		Ok(())
 	}
 

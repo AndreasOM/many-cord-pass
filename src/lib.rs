@@ -13,7 +13,7 @@ mod deck;
 use deck::Deck;
 
 mod deck_minifb;
-use deck_minifb::Deck_Minifb;
+//use deck_minifb::DeckMinifb;
 
 mod deck_streamdeck;
 
