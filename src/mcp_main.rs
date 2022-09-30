@@ -1,5 +1,18 @@
+use std::path::Path;
+use std::path::PathBuf;
+
+use clap::Parser;
+
 use many_cord_pass::Config;
 use many_cord_pass::ManyCordPass;
+
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    /// Sets a custom config file
+    #[arg(short, long, value_name = "CONFIG")]
+    config: Option<PathBuf>,
+}
 
 fn find_deck() -> (u16, u16, Option<String>) {
     let hid = hidapi::HidApi::new().expect("could not connect to hidapi");
@@ -45,8 +58,13 @@ fn fill(deck: &mut streamdeck::StreamDeck, delay: u64, r: u8, g: u8, b: u8) -> a
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    let cli = Cli::parse();
+
+    let config = cli.config/*.as_deref()*/.unwrap_or( Path::new("config.yaml").to_path_buf() );
+    let config = config.into_os_string().into_string().expect("Invalid config file path");
     let mut mcp = ManyCordPass::default();
-    mcp.load_config("config.yaml")?;
+    println!("Loading config from {}", &config);
+    mcp.load_config(&config)?;
     dbg!(&mcp);
     /*
     match mcp.find_and_connect() {
