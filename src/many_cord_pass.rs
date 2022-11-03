@@ -1,4 +1,9 @@
 use std::collections::HashMap;
+use std::net::{SocketAddrV4, UdpSocket};
+use std::str::FromStr;
+
+use rosc::encoder;
+use rosc::{OscMessage, OscPacket};
 
 //use derivative::Derivative;
 use crate::action::Action;
@@ -25,6 +30,7 @@ pub struct ManyCordPass {
 	deck:            Vec<Box<dyn Deck>>, // :TODO: impl Deck
 	pressed_buttons: Vec<bool>,
 	done:            bool,
+	udp_socket:      Option<UdpSocket>,
 }
 
 impl core::fmt::Debug for ManyCordPass {
@@ -312,6 +318,24 @@ impl ManyCordPass {
 							},
 						};
 					});
+				},
+				Action::OscSend(host, msg) => {
+					if self.udp_socket.is_none() {
+						let addr = "0.0.0.0:3456";
+						let sock_addr = SocketAddrV4::from_str(addr).unwrap();
+						let sock = UdpSocket::bind(sock_addr).unwrap();
+						self.udp_socket = Some(sock);
+					}
+					if let Some(sock) = &self.udp_socket {
+						let msg_buf = encoder::encode(&OscPacket::Message(OscMessage {
+							addr: msg,
+							args: vec![],
+						}))
+						.unwrap();
+						println!("Sending OSC {:?} to {}", &msg_buf, &host);
+						let host_addr = SocketAddrV4::from_str(&host).unwrap();
+						sock.send_to(&msg_buf, host_addr).unwrap();
+					}
 				},
 			}
 		}

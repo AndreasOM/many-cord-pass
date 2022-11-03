@@ -62,7 +62,7 @@ buttons:
       on_release:
         actions: [
           "Clear( 80, 200, 200 )",
-          "HttpGet(http://172.20.1.187:8080/page/prev)",
+          "HttpGet(http://${env:CHEVAL_HOST}:8080/page/prev)",
           "Test",
 #          Shutdown
         ]
@@ -73,7 +73,7 @@ buttons:
       on_release:
         actions: [
           "Clear( 200, 200, 80 )",
-          "HttpGet(http://172.20.1.187:8080/page/next)",
+          "HttpGet(http://${env:CHEVAL_HOST}:8080/page/next)",
           "Test",
 #          Shutdown
         ]
@@ -118,19 +118,35 @@ buttons:
         actions: [
           "HttpGet(http://127.0.0.1:8080/page/name/Page%204)",
         ]
+    - name:           "macro 60"
+      type:           simple
+      image:          "data/page_6.png"
+#      image_active:   "data/right_active.png"
+      on_release:
+        actions: [
+          "OscSend(127.0.0.1:3333,/atem/macros/60/run)",
+        ]
+    - name:           "macro 62"
+      type:           simple
+      image:          "data/page_6.png"
+#      image_active:   "data/right_active.png"
+      on_release:
+        actions: [
+          "OscSend(127.0.0.1:3333,/atem/macros/62/run)",
+        ]
 pages:
     - name: default
       buttons: [
         shutdown,
         "big me",
         "small me",
-        None,
+        "macro 60",
         about,
 
         "page prev",
         None,
         about,
-        None,
+        "macro 62",
         "page next",
 
 #        "shutdown blue",

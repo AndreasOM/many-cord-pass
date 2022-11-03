@@ -9,6 +9,7 @@ pub enum Action {
 	Shutdown,
 	HttpGet(String),
 	ObsScene(String, String),
+	OscSend(String, String),
 }
 
 impl Default for Action {
@@ -80,6 +81,26 @@ fn obsscene_from_string(s: &str) -> Option<Action> {
 	None
 }
 
+fn oscsend_from_string(s: &str) -> Option<Action> {
+	lazy_static! {
+				static ref RE: Regex =
+					Regex::new(
+	//                  r"^HttpGet\(\s*http:\\\\.*\s*\)$",
+						r"^OscSend\(\s*(.+)\s*,\s*(.+)\s*\)$",
+					).unwrap();
+			}
+	if let Some(c) = RE.captures(s) {
+		dbg!(&c);
+		println!("--------");
+		if c.len() == 3 {
+			return Some(Action::OscSend(c[1].to_string(), c[2].to_string()));
+		}
+	}
+
+	dbg!(s);
+	None
+}
+
 impl From<&str> for Action {
 	fn from(v: &str) -> Self {
 		match v {
@@ -91,6 +112,8 @@ impl From<&str> for Action {
 				} else if let Some(a) = httpget_from_string(&v) {
 					a
 				} else if let Some(a) = obsscene_from_string(&v) {
+					a
+				} else if let Some(a) = oscsend_from_string(&v) {
 					a
 				} else {
 					Action::None
